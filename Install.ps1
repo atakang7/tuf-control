@@ -1,4 +1,4 @@
-# Installs the published build to C:\Program Files\TufControl as the single copy,
+﻿# Installs the published build to C:\Program Files\TufControl as the single copy,
 # points the logon task there, removes old copies, restarts and verifies.
 # Run as administrator after: dotnet publish src\TufControl.csproj -c Release -r win-x64 --self-contained false -o publish
 #Requires -RunAsAdministrator
@@ -34,7 +34,7 @@ foreach ($o in $old) { if (Test-Path $o) { Remove-Item $o -Recurse -Force; Write
 
 Write-Host '5. Starting TufControl'
 Start-ScheduledTask -TaskName 'TufControl.Logon'
-Start-Sleep 30
+Start-Sleep 20
 
 Write-Host '6. Checking'
 $copies = @(Get-ChildItem C:\Users\atakan, 'C:\Program Files', 'C:\Program Files (x86)' -Recurse -Filter TufControl.exe -ErrorAction SilentlyContinue |

@@ -350,7 +350,8 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 	}
 
 	// Reads back every setting the firmware exposes and compares it to the profile.
-	// Mode and power limits have no readback on this firmware (DSTS returns a support flag).
+	// Only GPU mode and the CPU temperature limit (SMU) have a real readback; mode, power
+	// limits and fan curves are confirmed by the firmware accepting the write.
 	public VerifyItem[] Verify(Profile p, bool thermalDeferred = false)
 	{
 		List<VerifyItem> items = new List<VerifyItem>();
@@ -363,8 +364,10 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 		}
 		if (p.CustomFans)
 		{
-			items.Add(Curve("CPU fan eğrisi", 1114148u, p.Cpu));
-			items.Add(Curve("GPU fan eğrisi", 1114149u, p.Gpu));
+			// DSTS on the curve endpoints returns the factory default curve for the mode, not the
+			// active custom curve (confirmed on FA607NUQ), so there is nothing to compare against.
+			items.Add(new VerifyItem("CPU fan eğrisi", Convert.ToHexString(Profile.Encode(p.Cpu)), "?", null));
+			items.Add(new VerifyItem("GPU fan eğrisi", Convert.ToHexString(Profile.Encode(p.Gpu)), "?", null));
 		}
 		if (p.LimitPower)
 		{
@@ -395,16 +398,6 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 			}
 		}
 		return items.ToArray();
-		VerifyItem Curve(string name, uint id, FanPoint[] curve)
-		{
-			byte[] expected = Profile.Encode(curve);
-			byte[] actual = hw.ReadCurve(id, p.Mode);
-			if (actual.Length != 16)
-			{
-				return new VerifyItem(name, Convert.ToHexString(expected), "okunamadı", null);
-			}
-			return new VerifyItem(name, Convert.ToHexString(expected), Convert.ToHexString(actual), actual.SequenceEqual(expected));
-		}
 	}
 
 	public static string Describe(IEnumerable<VerifyItem> items)
