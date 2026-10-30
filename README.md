@@ -6,18 +6,18 @@ Fan curves, power limits and GPU mode for the ASUS TUF Gaming A16 (FA607NUQ), wi
 
 ## Results
 
-Measured on my TUF A16 FA607NUQ over 7 days (25,330 samples), stock firmware vs. my TUF Control profiles.
+Averages measured on my TUF A16 FA607NUQ over 7 days, stock firmware vs. my TUF Control profiles.
 
 | | Stock firmware | TUF Control |
 |---|---|---|
-| **Battery, idle: fan speed** | 5,200 rpm | **0 rpm (silent)** |
-| **Battery, idle: power drain** | 14.6 W | **9.0 W (−38 %)** |
-| **Plugged in, light load: CPU temp** | 69 °C | **59 °C** |
-| **Plugged in, light load: fan speed** | 3,000 rpm | **2,300 rpm** |
-| **Plugged in, idle: fan speed** | 2,900 rpm | **2,300 rpm** |
+| **Plugged in: CPU temp** | 59.1 °C | **55.7 °C** |
+| **Plugged in: CPU fan** | 2,907 rpm | **2,372 rpm (−18 %)** |
+| **On battery: CPU fan** | 5,185 rpm | **771 rpm (−85 %)** |
+| **On battery: power drain** | 14.4 W | **10.9 W (−24 %)** |
 
-Medians within the same CPU-load band. Trade-off: with the 15 W plugged-in profile, light-load
-CPU clock is 2.8 GHz instead of 3.6 GHz. Raise the limit in a second profile for gaming.
+Recorded time: plugged in 5.6 h stock / 73.7 h TUF Control, on battery 0.5 h / 1.5 h.
+Trade-off: with the 15 W plugged-in profile the average CPU clock is 2.8 GHz instead of 3.3 GHz.
+Raise the limit in a second profile for gaming.
 
 <img src="docs/screenshots/dashboard.png" alt="TUF Control dashboard">
 
