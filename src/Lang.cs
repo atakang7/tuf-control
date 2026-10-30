@@ -485,6 +485,14 @@ public static class Lang
 		dictionary["RTX meşgul; diğer ayarlar uygulandı, Eco birazdan yeniden denenecek."] = "RTX busy; other settings applied, Eco will be retried shortly.";
 		dictionary["Uygulanamadı; kısa süre sonra yeniden denenecek."] = "Could not apply; will retry shortly.";
 		dictionary["Uygulanamadı; {0} sn sonra yeniden denenecek."] = "Could not apply; retrying in {0} s.";
+		dictionary["Düzenlenen profil"] = "Editing profile";
+		dictionary["Düzenlenen: {0} · Henüz etkin profil yok. Uygula'ya basınca bu profil etkin olur."] = "Editing: {0} · No profile is active yet. Press Apply to make this one active.";
+		dictionary["Etkin profil {0} düzenleniyor · kaydedilmemiş değişiklikler Uygula'ya basana kadar donanıma gitmez."] = "Editing the active profile {0} · unsaved changes reach the hardware only when you press Apply.";
+		dictionary["Etkin profil {0} düzenleniyor · gördüğün değerler şu an donanımda."] = "Editing the active profile {0} · the values you see are what the hardware is running.";
+		dictionary["Düzenlenen: {0} · Şu an etkin: {1}. Buradaki değerler {0} profiline aittir; Uygula'ya basana kadar donanıma gitmez."] = "Editing: {0} · Active now: {1}. These values belong to {0}; they reach the hardware only when you press Apply.";
+		dictionary[" · şu an etkin"] = " · active now";
+		dictionary[" · şu an düzenleniyor"] = " · being edited";
+		dictionary["{0} uygulandı. Editörde {1} için kaydedilmemiş değişiklikler var; o yüzden editör {1} üzerinde kaldı."] = "{0} applied. The editor has unsaved changes for {1}, so it stays on {1}.";
 		dictionary["Armoury Crate / G-Helper açık; ayarlar üstüne yazılıp doğrulanacak."] = "Armoury Crate / G-Helper is running; settings will be overridden and verified.";
 		dictionary["Şu bileşenler açık; TufControl ayarlarını üstüne yazıp geri okuyarak doğruluyor:"] = "These components are running; TufControl overrides them and verifies its settings by reading them back:";
 		dictionary["Ayarlar dışarıdan değiştirilmiş; yeniden uygulanıyor:"] = "Settings were changed externally; re-applying:";

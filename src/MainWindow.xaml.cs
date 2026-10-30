@@ -41,7 +41,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 
 	private sealed record MonitorTile(Metric Metric, MetricChart Chart, TextBlock Current, TextBlock Min, TextBlock Avg, TextBlock Max, TextBlock Seg);
 
-	public sealed record HeaderItem(string Name, string Icon, bool IsActive, string Hint);
+	public sealed record HeaderItem(string Name, string Icon, bool IsActive, string Hint, string Display);
 
 	private sealed record StartupChoice(string Mode, string Profile, string Label);
 
@@ -1193,7 +1193,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		CurvePreview.GpuBrush = Res("GpuBrush");
 		bool onAcNow = SystemInformation.PowerStatus.PowerLineStatus != System.Windows.Forms.PowerLineStatus.Offline;
 		pendingName = (readOnly ? null : (startup ? settings.StartupTarget(onAcNow, IsRunning) : (settings.AutoApply ? settings.Desired(onAcNow, IsRunning) : null)));
-		selected = settings.AcProfile;
+		selected = (pendingName != null && settings.Profiles.Any((Profile p) => p.Name == pendingName)) ? pendingName : settings.AcProfile;
 		FillPickers();
 		LoadProfile();
 		loading = false;
@@ -1571,6 +1571,11 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 	{
 		if (Pages != null)
 		{
+			// Entering Cooling/Power from elsewhere: open the editor on the profile that is actually running.
+			if (IsEditorPage(index) && !IsEditorPage(Pages.SelectedIndex))
+			{
+				EditProfile(ActiveName);
+			}
 			Pages.SelectedIndex = index;
 			ProfileBar.Visibility = ((!IsEditorPage(index)) ? Visibility.Collapsed : Visibility.Visible);
 			navigating = true;
@@ -1580,6 +1585,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			{
 				ApplyAccent(BaseMode);
 			}
+			RefreshHeader();
 			if (index == 1)
 			{
 				UpdateMonitor();
@@ -1615,9 +1621,58 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		SelectPage(2);
 	}
 
+	// The profile currently running on the hardware (or about to be applied at startup).
+	private string? ActiveName => applied?.Name ?? pendingName;
+
+	private bool OnEditorPage => Pages != null && IsEditorPage(Pages.SelectedIndex);
+
+	// Point the Cooling/Power editor at another profile, unless that would throw away unsaved edits.
+	private bool EditProfile(string? name)
+	{
+		if (name == null || name == selected || editDirty || !settings.Profiles.Any((Profile p) => p.Name == name))
+		{
+			return false;
+		}
+		bool was = loading;
+		loading = true;
+		selected = name;
+		ProfilePicker.SelectedItem = name;
+		loading = was;
+		LoadProfile();
+		return true;
+	}
+
+	private void UpdateEditState()
+	{
+		if (EditState == null)
+		{
+			return;
+		}
+		string active = ActiveName;
+		string key;
+		if (active == null)
+		{
+			EditState.Text = Lang.F("Düzenlenen: {0} · Henüz etkin profil yok. Uygula'ya basınca bu profil etkin olur.", selected);
+			key = "TextMuted";
+		}
+		else if (active == selected)
+		{
+			EditState.Text = editDirty ? Lang.F("Etkin profil {0} düzenleniyor · kaydedilmemiş değişiklikler Uygula'ya basana kadar donanıma gitmez.", selected) : Lang.F("Etkin profil {0} düzenleniyor · gördüğün değerler şu an donanımda.", selected);
+			key = editDirty ? "Warn" : "Good";
+		}
+		else
+		{
+			EditState.Text = Lang.F("Düzenlenen: {0} · Şu an etkin: {1}. Buradaki değerler {0} profiline aittir; Uygula'ya basana kadar donanıma gitmez.", selected, active);
+			key = "Warn";
+		}
+		EditStateDot.Fill = Res(key);
+	}
+
 	private void RefreshHeader()
 	{
-		string active = applied?.Name ?? pendingName;
+		string active = ActiveName;
+		bool editing = OnEditorPage;
+		UpdateEditState();
 		HeaderProfiles.ItemsSource = settings.Profiles.Select((Profile p) =>
 		{
 			List<string> list = new List<string>();
@@ -1632,9 +1687,10 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			list.AddRange(from r in settings.AppRules
 				where r.Profile == p.Name
 				select r.Process + Lang.T(".exe açıkken"));
-			string hint = Lang.T("Tıkla ve uygula") + ((list.Count > 0) ? (Lang.T(" · otomatik: ") + string.Join(", ", list)) : "");
+			bool edited = editing && p.Name == selected;
+			string hint = Lang.T("Tıkla ve uygula") + ((list.Count > 0) ? (Lang.T(" · otomatik: ") + string.Join(", ", list)) : "") + ((p.Name == active) ? Lang.T(" · şu an etkin") : "") + (edited ? Lang.T(" · şu an düzenleniyor") : "");
 			string icon = ((p.GpuMode == 2) ? "\ue83f" : ((p.Mode == 1) ? "\ue945" : ((p.Mode == 2) ? "\ue708" : "\ue7e8")));
-			return new HeaderItem(p.Name, icon, p.Name == active, hint);
+			return new HeaderItem(p.Name, icon, p.Name == active, hint, edited ? (p.Name + " ✎") : p.Name);
 		}).ToList();
 	}
 
@@ -1659,7 +1715,12 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		Profile p = settings.Profiles.FirstOrDefault((Profile x) => x.Name == item.Name);
 		if (p != null)
 		{
-			await ApplyAsync(p.Clone());
+			bool ok = await ApplyAsync(p.Clone());
+			// The header chip is "make this the active profile"; keep the editor on the same one.
+			if (ok && !EditProfile(p.Name) && editDirty && p.Name != selected)
+			{
+				SetStatus(Lang.F("{0} uygulandı. Editörde {1} için kaydedilmemiş değişiklikler var; o yüzden editör {1} üzerinde kaldı.", p.Name, selected), "Warn");
+			}
 			RefreshHeader();
 		}
 	}
@@ -1688,6 +1749,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			editDirty = true;
 			SetStatus("Kaydedilmemiş değişiklikler var.", "Warn");
 			UpdateSummary();
+			UpdateEditState();
 		}
 	}
 
@@ -2050,6 +2112,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			bool discarded = editDirty;
 			selected = name;
 			LoadProfile();
+			RefreshHeader();
 			SetStatus(discarded ? (name + " yüklendi; kaydedilmemiş değişiklikler atıldı.") : Lang.F("{0} yüklendi.", name), "TextMuted");
 		}
 	}
