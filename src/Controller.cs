@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -125,11 +126,9 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 			}
 			if (conflict)
 			{
+				// Another controller may have changed the mode behind our back; always rewrite it.
 				lastMode = null;
-			}
-			if (conflict)
-			{
-				return new ApplyResult(Success: false, "Armoury Crate / ASUSOptimization / G-Helper etkin. Çakışma çözülmeden uygulama yapılmadı.");
+				log("Armoury Crate / ASUSOptimization / G-Helper etkin; ayarlar üstüne yazılıp geri okunarak doğrulanacak.");
 			}
 			Capabilities cap = Probe();
 			if (!cap.Mode || (p.CustomFans && (!cap.CpuCurve || !cap.GpuCurve)) || (p.LimitPower && !cap.Power) || (p.LimitTemperature && !cap.Thermal) || (p.LimitBoost && !cap.Boost) || ((p.TuneGpu || p.LimitGpuTemp) && !cap.Gpu) || (p.GpuMode != 0 && !cap.Eco))
@@ -240,7 +239,24 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 					}
 				}
 				thermalWasApplied = p.LimitTemperature && !thermalDeferred;
-				string msg = "Mod ve seçili fan/güç ayarları firmware tarafından kabul edildi (aktif değer geri okuması yok)." + (p.LimitTemperature ? " CPU sıcaklık limiti SMU tablosundan doğrulandı." : "") + gpuNote + (thermalDeferred ? " CPU sıcaklık hedefi, sürücü hazır olunca uygulanacak." : "");
+				VerifyItem[] mismatched = Verify(p, thermalDeferred).Where((VerifyItem v) => v.Match == false).ToArray();
+				if (mismatched.Length != 0)
+				{
+					log("Geri okuma eşleşmedi (" + Describe(mismatched) + "); bir kez daha yazılıyor.");
+					WriteAll();
+					if (ReassertDelayMs > 0)
+					{
+						Thread.Sleep(350);
+					}
+					mismatched = Verify(p, thermalDeferred).Where((VerifyItem v) => v.Match == false).ToArray();
+					if (mismatched.Length != 0)
+					{
+						string fail = "Doğrulama başarısız: " + Describe(mismatched) + ". Başka bir uygulama değerleri değiştiriyor olabilir.";
+						log(p.Name + ": " + fail);
+						return new ApplyResult(Success: false, fail);
+					}
+				}
+				string msg ="Mod ve seçili fan/güç ayarları firmware tarafından kabul edildi (aktif değer geri okuması yok)." + (p.LimitTemperature ? " CPU sıcaklık limiti SMU tablosundan doğrulandı." : "") + gpuNote + (thermalDeferred ? " CPU sıcaklık hedefi, sürücü hazır olunca uygulanacak." : "");
 				log(p.Name + ": " + msg);
 				return new ApplyResult(Success: true, msg, GpuBusy: false, thermalDeferred);
 			}
@@ -331,6 +347,69 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 				Set(1179840u, p.GpuBoostWatts);
 			}
 		}
+	}
+
+	// Reads back every setting the firmware exposes and compares it to the profile.
+	// Mode and power limits have no readback on this firmware (DSTS returns a support flag).
+	public VerifyItem[] Verify(Profile p, bool thermalDeferred = false)
+	{
+		List<VerifyItem> items = new List<VerifyItem>();
+		items.Add(new VerifyItem("Temel mod", p.Mode.ToString(), "?", null));
+		if (p.GpuMode != 0)
+		{
+			int expected = (p.GpuMode == 2) ? 1 : 0;
+			int? actual = hw.Read(589856u);
+			items.Add(new VerifyItem("GPU modu (Eco)", expected.ToString(), actual?.ToString() ?? "okunamadı", actual.HasValue ? new bool?(actual == expected) : null));
+		}
+		if (p.CustomFans)
+		{
+			items.Add(Curve("CPU fan eğrisi", 1114148u, p.Cpu));
+			items.Add(Curve("GPU fan eğrisi", 1114149u, p.Gpu));
+		}
+		if (p.LimitPower)
+		{
+			items.Add(new VerifyItem("CPU güç sınırı", $"{p.CpuWatts} W", "?", null));
+		}
+		if (p.LimitBoost)
+		{
+			items.Add(new VerifyItem("CPU boost sınırı", $"{p.CpuSlowWatts}/{p.CpuFastWatts} W", "?", null));
+		}
+		if (p.TuneGpu)
+		{
+			items.Add(new VerifyItem("GPU boost", $"{p.GpuBoostWatts} W", "?", null));
+		}
+		if (p.LimitGpuTemp)
+		{
+			items.Add(new VerifyItem("GPU sıcaklık hedefi", $"{p.GpuTempTarget} °C", "?", null));
+		}
+		if (p.LimitTemperature && !thermalDeferred && thermal != null)
+		{
+			try
+			{
+				int actual2 = thermal.Read();
+				items.Add(new VerifyItem("CPU sıcaklık sınırı", $"{p.CpuTarget} °C", $"{actual2} °C", actual2 == p.CpuTarget));
+			}
+			catch (Exception ex)
+			{
+				items.Add(new VerifyItem("CPU sıcaklık sınırı", $"{p.CpuTarget} °C", ex.Message, null));
+			}
+		}
+		return items.ToArray();
+		VerifyItem Curve(string name, uint id, FanPoint[] curve)
+		{
+			byte[] expected = Profile.Encode(curve);
+			byte[] actual = hw.ReadCurve(id, p.Mode);
+			if (actual.Length != 16)
+			{
+				return new VerifyItem(name, Convert.ToHexString(expected), "okunamadı", null);
+			}
+			return new VerifyItem(name, Convert.ToHexString(expected), Convert.ToHexString(actual), actual.SequenceEqual(expected));
+		}
+	}
+
+	public static string Describe(IEnumerable<VerifyItem> items)
+	{
+		return string.Join(", ", items.Select((VerifyItem v) => $"{v.Name}: beklenen {v.Expected}, okunan {v.Actual}"));
 	}
 
 	private void Set(uint id, int value)

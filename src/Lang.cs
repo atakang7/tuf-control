@@ -485,6 +485,10 @@ public static class Lang
 		dictionary["RTX meşgul; diğer ayarlar uygulandı, Eco birazdan yeniden denenecek."] = "RTX busy; other settings applied, Eco will be retried shortly.";
 		dictionary["Uygulanamadı; kısa süre sonra yeniden denenecek."] = "Could not apply; will retry shortly.";
 		dictionary["Uygulanamadı; {0} sn sonra yeniden denenecek."] = "Could not apply; retrying in {0} s.";
+		dictionary["Armoury Crate / G-Helper açık; ayarlar üstüne yazılıp doğrulanacak."] = "Armoury Crate / G-Helper is running; settings will be overridden and verified.";
+		dictionary["Şu bileşenler açık; TufControl ayarlarını üstüne yazıp geri okuyarak doğruluyor:"] = "These components are running; TufControl overrides them and verifies its settings by reading them back:";
+		dictionary["Ayarlar dışarıdan değiştirilmiş; yeniden uygulanıyor:"] = "Settings were changed externally; re-applying:";
+		dictionary["Ayarlar yeniden uygulandı ve doğrulandı."] = "Settings re-applied and verified.";
 		dictionary["Mod geçişi: ayarlar moddan {0} ms sonra yazıldı; firmware toparlanınca yeniden yazılacak."] = "Mode switch: settings written {0} ms after the mode; they are rewritten once the firmware settles.";
 		dictionary["RTX hâlâ meşgul; Eco'ya geçilemedi. Profili elle uygulayabilirsin."] = "RTX still busy; could not switch to Eco. You can apply the profile by hand.";
 		dictionary["Eco uygulandı."] = "Eco applied.";

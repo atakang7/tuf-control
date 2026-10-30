@@ -32,15 +32,13 @@ public static class BootRunner
 			}
 			using AsusHardware hardware = new AsusHardware();
 			using Thermal thermal = new Thermal();
-			Controller controller = new Controller(hardware, (string _) =>
-			{
-			}, thermal);
+			Controller controller = new Controller(hardware, Log, thermal);
 			for (int attempt = 0; attempt <= StartupRetry.Delays.Length; attempt++)
 			{
-				if (Machine.Conflicts().Length != 0)
+				string[] conflicts = Machine.Conflicts();
+				if (conflicts.Length != 0)
 				{
-					Log("Armoury Crate / G-Helper etkin; hiçbir şey uygulanmadı.");
-					return 3;
+					Log("Çakışan bileşenler etkin (" + string.Join(", ", conflicts) + "); ayarlar üstüne yazılıp doğrulanacak.");
 				}
 				Snapshot sample = Machine.Sample(hardware);
 				string target = settings.StartupTarget(sample.OnAc ?? true, (string _) => false);
@@ -63,7 +61,7 @@ public static class BootRunner
 					{
 					}
 				}
-				ApplyResult result = controller.Apply(profile, modelAllowed: true, conflict: false, deferThermal: true);
+				ApplyResult result = controller.Apply(profile, modelAllowed: true, conflicts.Length != 0, deferThermal: true);
 				if (result.Success)
 				{
 					Save(dir, profile, controller, result.ThermalPending);

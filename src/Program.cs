@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,6 +55,10 @@ public static class Program
 				}));
 				return 0;
 			}
+		}
+		if (args.Contains("--verify"))
+		{
+			return Verify(args);
 		}
 		bool created;
 		using Mutex mutex = new Mutex(initiallyOwned: true, "Local\\TufControl.UI" + (readOnly ? ".ReadOnly" : ""), out created);
@@ -178,5 +183,34 @@ public static class Program
 				((IDisposable)showSignal).Dispose();
 			}
 		}
+	}
+
+	// --verify [profile]: read back the live firmware state and compare it to the saved profile.
+	// Writes verify.json next to profiles.json; exit code 0 = everything readable matches, 1 = mismatch.
+	private static int Verify(string[] args)
+	{
+		Store store = new Store(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TufControl"));
+		Settings settings = store.Load();
+		int at = Array.IndexOf(args, "--verify");
+		string name = (at + 1 < args.Length && !args[at + 1].StartsWith("--")) ? args[at + 1] : settings.LastProfile;
+		Profile profile = settings.Profiles.FirstOrDefault((Profile p) => p.Name == name) ?? settings.Profiles.First();
+		using AsusHardware hw = new AsusHardware(readOnly: true);
+		VerifyItem[] items = new Controller(hw, (string _) =>
+		{
+		}).Verify(profile);
+		bool ok = items.All((VerifyItem v) => v.Match != false);
+		var report = new
+		{
+			Time = DateTimeOffset.Now,
+			Profile = profile.Name,
+			Ok = ok,
+			Conflicts = Machine.Conflicts(),
+			Items = items
+		};
+		File.WriteAllText(Path.Combine(store.DirectoryPath, "verify.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions
+		{
+			WriteIndented = true
+		}));
+		return ok ? 0 : 1;
 	}
 }

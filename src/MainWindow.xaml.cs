@@ -1654,9 +1654,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		}
 		if (conflicts.Length != 0)
 		{
-			SetStatus("Armoury Crate / G-Helper açık; uygulanmadı. Ayrıntılar Günlük sayfasında.", "Warn");
-			RefreshHeader();
-			return;
+			Log(Lang.T("Armoury Crate / G-Helper açık; ayarlar üstüne yazılıp doğrulanacak."));
 		}
 		Profile p = settings.Profiles.FirstOrDefault((Profile x) => x.Name == item.Name);
 		if (p != null)
@@ -2026,8 +2024,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 	{
 		if (conflicts.Length != 0)
 		{
-			SetStatus("Armoury Crate / G-Helper açık; uygulanmadı. Ayrıntılar Günlük sayfasında.", "Warn");
-			return;
+			Log(Lang.T("Armoury Crate / G-Helper açık; ayarlar üstüne yazılıp doğrulanacak."));
 		}
 		try
 		{
@@ -2402,7 +2399,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			if (!readOnly && !quitting && settings.ExternalStandard)
 			{
 				Profile? profile = requested;
-				if (profile != null && profile.GpuMode == 2 && conflicts.Length == 0)
+				if (profile != null && profile.GpuMode == 2)
 				{
 					await ApplyAsync(requested.Clone());
 				}
@@ -2412,7 +2409,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		{
 			return;
 		}
-		if (ecoPending && DateTimeOffset.Now >= ecoRetryAt && requested != null && conflicts.Length == 0)
+		if (ecoPending && DateTimeOffset.Now >= ecoRetryAt && requested != null)
 		{
 			ecoRetryAt = DateTimeOffset.Now.AddSeconds(45.0);
 			if (++ecoTries > 8)
@@ -2425,7 +2422,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 				Log(Lang.T("Eco uygulandı."));
 			}
 		}
-		if (thermalPending && DateTimeOffset.Now >= thermalRetryAt && requested != null && conflicts.Length == 0)
+		if (thermalPending && DateTimeOffset.Now >= thermalRetryAt && requested != null)
 		{
 			thermalRetryAt = DateTimeOffset.Now.AddSeconds(5.0);
 			if (++thermalTries > 12)
@@ -2484,44 +2481,37 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		}
 		goto IL_0711;
 		IL_0711:
-		if (!(applied?.LimitTemperature ?? false) || !(DateTimeOffset.Now - lastThermalCheck > TimeSpan.FromSeconds(30L)) || !(await gate.WaitAsync(0)))
+		// Drift watch: every 30 s read back what the firmware exposes; if another app
+		// (Armoury Crate, ASUSOptimization, G-Helper) changed it, re-apply the profile.
+		if (applied == null || requested == null || !(DateTimeOffset.Now - lastThermalCheck > TimeSpan.FromSeconds(30L)) || !(await gate.WaitAsync(0)))
 		{
 			return;
 		}
 		lastThermalCheck = DateTimeOffset.Now;
+		VerifyItem[] drift;
 		try
 		{
-			await Task.Run(() =>
-			{
-				if (Machine.Conflicts().Length != 0)
-				{
-					throw new IOException("Başka bir kontrol uygulaması açıldı; sıcaklık takibi durduruldu.");
-				}
-				if (thermal.Read() != applied.CpuTarget)
-				{
-					thermal.Set(applied.CpuTarget);
-					if (thermal.Read() != applied.CpuTarget)
-					{
-						throw new IOException("Sıcaklık limiti tekrar doğrulanamadı.");
-					}
-					((DispatcherObject)this).Dispatcher.Invoke((Action)(() =>
-					{
-						Log("Sıcaklık limiti sıfırlanmıştı; yeniden uygulanıp doğrulandı.");
-					}));
-				}
-			});
-			return;
+			Profile check = applied.Clone();
+			drift = await Task.Run(() => controller.Verify(check).Where((VerifyItem v) => v.Match == false).ToArray());
 		}
 		catch (Exception ex)
 		{
-			autoPaused = true;
-			Log(ex.Message + " Otomatik işlem durdu.");
+			Log(ex.Message);
 			return;
 		}
 		finally
 		{
 			gate.Release();
 		}
+		if (drift.Length != 0)
+		{
+			Log(Lang.T("Ayarlar dışarıdan değiştirilmiş; yeniden uygulanıyor:") + " " + Controller.Describe(drift));
+			if (await ApplyAsync(requested.Clone(), waitForGate: false, auto: true, deferThermal: true))
+			{
+				Log(Lang.T("Ayarlar yeniden uygulandı ve doğrulandı."));
+			}
+		}
+		return;
 		IL_0571:
 		string desired = text;
 		bool due = DateTimeOffset.Now >= nextAuto;
@@ -2752,7 +2742,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			RecordSample(DateTime.Now, sys);
 			UpdateStatusList(cpu, gpu);
 			ShowCapabilities(capabilities);
-			ConflictText.Text = ((conflicts.Length != 0) ? (Lang.T("Şu bileşenler açık olduğu için ayar uygulanamaz:") + "\n• " + string.Join("\n• ", conflicts)) : Lang.T("Armoury Crate, ASUSOptimization ve G-Helper kapalı. Ayarlar uygulanabilir."));
+			ConflictText.Text = ((conflicts.Length != 0) ? (Lang.T("Şu bileşenler açık; TufControl ayarlarını üstüne yazıp geri okuyarak doğruluyor:") + "\n• " + string.Join("\n• ", conflicts)) : Lang.T("Armoury Crate, ASUSOptimization ve G-Helper kapalı. Ayarlar uygulanabilir."));
 			TextBlock capabilityText = CapabilityText;
 			string[] array = new string[5];
 			InlineArray8<string> buffer = default;
@@ -2994,7 +2984,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			settings = candidate;
 			SetStatus("Kaydedildi.", "Good");
 			Profile? profile = requested;
-			if (profile != null && profile.GpuMode == 2 && externalDisplay && conflicts.Length == 0)
+			if (profile != null && profile.GpuMode == 2 && externalDisplay)
 			{
 				await ApplyAsync(requested.Clone());
 			}

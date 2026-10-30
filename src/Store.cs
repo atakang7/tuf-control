@@ -25,13 +25,15 @@ public sealed class Store(string directory)
 	{
 		settings.Validate();
 		Directory.CreateDirectory(DirectoryPath);
+		JsonSerializerOptions options = new JsonSerializerOptions
+		{
+			WriteIndented = true
+		};
+		string intended = JsonSerializer.Serialize(settings, options);
 		string temp = FilePath + ".tmp";
 		using (FileStream fs = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
 		{
-			JsonSerializer.Serialize(fs, settings, new JsonSerializerOptions
-			{
-				WriteIndented = true
-			});
+			JsonSerializer.Serialize(fs, settings, options);
 			fs.Flush(flushToDisk: true);
 		}
 		if (File.Exists(FilePath))
@@ -41,6 +43,12 @@ public sealed class Store(string directory)
 		else
 		{
 			File.Move(temp, FilePath);
+		}
+		// Read the file back and make sure what landed on disk is exactly what was intended.
+		Settings stored = JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath)) ?? throw new IOException("Kaydedilen profil dosyası boş.");
+		if (JsonSerializer.Serialize(stored, options) != intended)
+		{
+			throw new IOException("Kaydedilen profil dosyası amaçlanan ayarlarla eşleşmiyor.");
 		}
 	}
 
