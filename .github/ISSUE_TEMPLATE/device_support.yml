@@ -1,0 +1,37 @@
+name: Support my laptop
+description: Ask for a model or BIOS to be verified
+labels: [device-support]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        On unverified models TUF Control runs **read-only**, so it is safe to try. Run it once,
+        then attach `diagnostics.json`:
+        `& "C:\Program Files\TufControl\TufControl.exe" --diagnose "$env:USERPROFILE\Desktop\diagnostics.json"`
+  - type: input
+    id: model
+    attributes:
+      label: Exact model (SystemProductName)
+      placeholder: TUF Gaming A16 FA607NUQ
+    validations:
+      required: true
+  - type: input
+    id: bios
+    attributes:
+      label: BIOS version
+    validations:
+      required: true
+  - type: input
+    id: cpu
+    attributes:
+      label: CPU and GPU
+      placeholder: AMD Ryzen 7 170, RTX 4050 Laptop
+    validations:
+      required: true
+  - type: textarea
+    id: diag
+    attributes:
+      label: diagnostics.json
+      render: json
+    validations:
+      required: true

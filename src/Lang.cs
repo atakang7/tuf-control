@@ -403,7 +403,7 @@ public static class Lang
 		dictionary["İçe aktar"] = "Import";
 		dictionary["Dışa aktar"] = "Export";
 		dictionary["Hakkında"] = "About";
-		dictionary["TUF Control v2.0 · GPL-3.0. G-Helper kaynaklarından uyarlanan bileşenler içerir. ASUS ile bağlantılı değildir."] = "TUF Control v2.0 · GPL-3.0. Contains components adapted from G-Helper. Not affiliated with ASUS.";
+		dictionary["TUF Control v2.1 · GPL-3.0. G-Helper ve PawnIO.Modules kaynaklarından uyarlanan bileşenler içerir. ASUS ile bağlantılı değildir."] = "TUF Control v2.1 · GPL-3.0. Contains components adapted from G-Helper and PawnIO.Modules. Not affiliated with ASUS.";
 		dictionary["Dil"] = "Language";
 		dictionary["Uygulama dili. Seçim anında uygulanır."] = "App language. Applies instantly.";
 		dictionary["2 dk"] = "2 min";
@@ -485,6 +485,12 @@ public static class Lang
 		dictionary["RTX meşgul; diğer ayarlar uygulandı, Eco birazdan yeniden denenecek."] = "RTX busy; other settings applied, Eco will be retried shortly.";
 		dictionary["Uygulanamadı; kısa süre sonra yeniden denenecek."] = "Could not apply; will retry shortly.";
 		dictionary["Uygulanamadı; {0} sn sonra yeniden denenecek."] = "Could not apply; retrying in {0} s.";
+		dictionary["TUF Control yalnızca Windows'ta çalışır."] = "TUF Control runs on Windows only.";
+		dictionary["TUF Control yalnızca x64 Windows'ta çalışır (bu sistem: {0})."] = "TUF Control runs on x64 Windows only (this system: {0}).";
+		dictionary["Windows 10 2004 (yapı {0}) veya daha yenisi gerekli; bu sistem yapı {1}."] = "Windows 10 2004 (build {0}) or newer is required; this system is build {1}.";
+		dictionary["Bu model ({0}) doğrulanmadı; uygulama salt okunur çalışır. Desteklenen: {1}."] = "This model ({0}) is not verified; the app runs read-only. Supported: {1}.";
+		dictionary["BIOS {0} test edilmedi (test edilen: {1}). Ayarlar uygulanır ama sorun görürsen bildir."] = "BIOS {0} is untested (tested: {1}). Settings are applied, but please report problems.";
+		dictionary["PawnIO sürücüsü kurulu değil; CPU sıcaklık hedefi kullanılamaz (diğer özellikler çalışır)."] = "PawnIO driver is not installed; the CPU temperature target is unavailable (everything else works).";
 		dictionary["Düzenlenen profil"] = "Editing profile";
 		dictionary["Düzenlenen: {0} · Henüz etkin profil yok. Uygula'ya basınca bu profil etkin olur."] = "Editing: {0} · No profile is active yet. Press Apply to make this one active.";
 		dictionary["Etkin profil {0} düzenleniyor · kaydedilmemiş değişiklikler Uygula'ya basana kadar donanıma gitmez."] = "Editing the active profile {0} · unsaved changes reach the hardware only when you press Apply.";

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
@@ -78,7 +79,7 @@ public static class Machine
 
 	public static string Model => Registry.GetValue("HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemProductName", null)?.ToString() ?? "Bilinmeyen model";
 
-	public static bool ModelAllowed => Model.Contains("FA607NUQ", StringComparison.OrdinalIgnoreCase);
+	public static bool ModelAllowed => Platform.VerifiedModels.Any((string m) => Model.Contains(m, StringComparison.OrdinalIgnoreCase));
 
 	public static string Processor => Registry.GetValue("HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", "ProcessorNameString", null)?.ToString()?.Trim() ?? "CPU";
 

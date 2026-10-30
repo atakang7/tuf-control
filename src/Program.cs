@@ -20,6 +20,15 @@ public static class Program
 	{
 		//IL_02a7: Unknown result type (might be due to invalid IL or missing references)
 		//IL_02b1: Expected Obj, but got Unknown
+		string blocker = Platform.Blocker();
+		if (blocker != null)
+		{
+			if (!args.Contains("--boot") && !args.Contains("--service") && !args.Contains("--verify") && !args.Contains("--diagnose"))
+			{
+				MessageBox.Show(blocker, "TUF Control");
+			}
+			return 4;
+		}
 		if (args.Contains("--boot"))
 		{
 			return BootRunner.Run(args);
@@ -37,6 +46,8 @@ public static class Program
 				var report = new
 				{
 					Time = DateTimeOffset.Now,
+					Version = typeof(Program).Assembly.GetName().Version?.ToString(),
+					Platform = Platform.Report(),
 					Model = Machine.Model,
 					Processor = Machine.Processor,
 					Capabilities = new Controller(hw, (string _) =>

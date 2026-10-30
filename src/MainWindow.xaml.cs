@@ -1197,6 +1197,11 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		FillPickers();
 		LoadProfile();
 		loading = false;
+		string[] warnings = Platform.Warnings();
+		foreach (string warning in warnings)
+		{
+			Log(warning);
+		}
 		CpuEditor.Changed += Dirty;
 		GpuEditor.Changed += Dirty;
 		System.Windows.Controls.CheckBox[] array = new System.Windows.Controls.CheckBox[6] { CustomFans, PowerLimitEnabled, TempLimitEnabled, BoostEnabled, GpuEnabled, GpuTempEnabled };

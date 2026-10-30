@@ -30,6 +30,11 @@ public static class BootRunner
 				Log("Bu model için donanım yazma kapalı.");
 				return 2;
 			}
+			string[] warnings = Platform.Warnings();
+			foreach (string warning in warnings)
+			{
+				Log(warning);
+			}
 			using AsusHardware hardware = new AsusHardware();
 			using Thermal thermal = new Thermal();
 			Controller controller = new Controller(hardware, Log, thermal);

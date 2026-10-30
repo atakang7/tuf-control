@@ -91,7 +91,7 @@
             </Viewbox>
             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
               <TextBlock Text="TUF Control" FontFamily="{StaticResource DisplayFont}" FontSize="18" FontWeight="SemiBold" />
-              <TextBlock Text="v2.0" FontSize="11.5" Foreground="{StaticResource TextMuted}" />
+              <TextBlock Text="v2.1" FontSize="11.5" Foreground="{StaticResource TextMuted}" />
             </StackPanel>
           </StackPanel>
           <Border Grid.Column="1" BorderBrush="{StaticResource Stroke}" BorderThickness="1,0,0,0" Margin="0,18" Padding="24,0,0,0">
@@ -1016,7 +1016,7 @@
                     <Border Style="{StaticResource Card}" Margin="0,16,0,0">
                       <StackPanel>
                         <TextBlock Text="Hakkında" Style="{StaticResource CardHead}" />
-                        <TextBlock Name="AboutText" Style="{StaticResource T.Body}" Margin="0,8,0,0" Text="TUF Control v2.0 · GPL-3.0. G-Helper kaynaklarından uyarlanan bileşenler içerir. ASUS ile bağlantılı değildir." />
+                        <TextBlock Name="AboutText" Style="{StaticResource T.Body}" Margin="0,8,0,0" Text="TUF Control v2.1 · GPL-3.0. G-Helper ve PawnIO.Modules kaynaklarından uyarlanan bileşenler içerir. ASUS ile bağlantılı değildir." />
                       </StackPanel>
                     </Border>
                   </StackPanel>

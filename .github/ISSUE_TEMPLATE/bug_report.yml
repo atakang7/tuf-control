@@ -1,0 +1,56 @@
+name: Bug report
+description: Something does not work on a supported machine
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please attach `diagnostics.json`. Create it with **Settings → Export diagnostics**, or run:
+        `& "C:\Program Files\TufControl\TufControl.exe" --diagnose "$env:USERPROFILE\Desktop\diagnostics.json"`
+  - type: input
+    id: model
+    attributes:
+      label: Laptop model
+      description: From System Information, e.g. "TUF Gaming A16 FA607NUQ"
+    validations:
+      required: true
+  - type: input
+    id: bios
+    attributes:
+      label: BIOS version
+      description: e.g. FA607NUQ.300
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and build
+      description: Run `winver`, e.g. "Windows 11 Pro 26H2, build 26300.9711"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: TUF Control version
+      placeholder: v2.1.0
+    validations:
+      required: true
+  - type: checkboxes
+    id: others
+    attributes:
+      label: Other control software running
+      options:
+        - label: Armoury Crate
+        - label: ASUSOptimization service (MyASUS)
+        - label: G-Helper
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Last lines of %LOCALAPPDATA%\TufControl\events.log
+      render: text
