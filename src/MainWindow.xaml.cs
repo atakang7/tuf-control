@@ -1152,6 +1152,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		MainWindow mainWindow = this;
 		this.readOnly = readOnly;
 		InitializeComponent();
+		SmoothScroll.Attach(this);
 		Icon = Brand.WindowIcon();
 		hardware = new AsusHardware(readOnly);
 		thermal = new Thermal(readOnly);
