@@ -99,7 +99,12 @@ public static class Program
 				showSignal.Set();
 				return 0;
 			}
-			RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+			// GPU rendering keeps scrolling smooth. It is pinned to the power-saving iGPU so the RTX stays
+			// asleep; if that cannot be guaranteed, or for PNG rendering, fall back to the CPU renderer.
+			if (args.Contains("--render") || args.Contains("--software-render") || !GpuPreference.PinToPowerSaving())
+			{
+				RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
+			}
 			Application app = new Application
 			{
 				ShutdownMode = ShutdownMode.OnExplicitShutdown

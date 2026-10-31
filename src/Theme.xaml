@@ -75,6 +75,12 @@
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="Border.CornerRadius" Value="16" />
     <Setter Property="Border.Padding" Value="20" />
+    <!-- Each card is kept as a GPU texture: scrolling only moves textures, and a change redraws one card, not the page. -->
+    <Setter Property="UIElement.CacheMode">
+      <Setter.Value>
+        <BitmapCache SnapsToDevicePixels="True" />
+      </Setter.Value>
+    </Setter>
   </Style>
   <Style x:Key="Well" TargetType="{x:Type Border}">
     <Setter Property="Background" Value="{StaticResource Surface2}" />
