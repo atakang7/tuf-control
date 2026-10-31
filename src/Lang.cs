@@ -71,7 +71,17 @@ public static class Lang
 
 		public const string DynBoost = "Oyunda CPU'dan GPU'ya aktarılabilecek ek güç. Yüksek değer oyunda daha fazla FPS, ama daha fazla ısı ve tüketim demektir.";
 
-		public const string Score = "Optimizasyon testindeki sürdürülebilir hesaplama hızı (milyon işlem/sn). Yüzde, en iyi denemeye göre oranıdır; yüksek olan daha güçlüdür.";
+		public const string WindowsCpu = "İşlemcinin anlık hızını Windows seçer; firmware ve bu uygulama ise üst sınırları (watt, sıcaklık, fan) belirler. Bu kart Windows'un o seçimini profile bağlar: profil uygulanınca ayarlar etkin güç planına (ör. Dengeli) yazılır ve geri okunarak doğrulanır. Plan değiştirilmez. Kapalı profile geçilince Windows varsayılanlarına dönülür.";
+
+		public const string MinCpuState = "İşlemcinin boştayken inebileceği en düşük hız (taban hızın yüzdesi). Windows varsayılanı %5'tir; yüksek değer işlemciyi boşta bile hızlı ve sıcak tutar.";
+
+		public const string MaxCpuClock = "İşlemcinin çıkabileceği en yüksek saat hızı. Günlük kullanım için 2,4–2,8 GHz çoğu zaman yeter ve belirgin şekilde serin, sessiz çalışır. Oyun profilinde kapalı bırak.";
+
+		public const string CpuEpp = "Windows'un hız seçerken neye öncelik verdiği. Düşük değer hızı çabuk yükseltir (çevik, sıcak); yüksek değer temkinli davranır (serin, pil dostu). Windows varsayılanı prizde 33, bataryada 50'dir.";
+
+		public const string CpuBoost = "Açıkken işlemci kısa yüklerde taban hızının (3,2 GHz) üstüne çıkar. Kapatınca daha serin ve sessiz çalışır ama tek çekirdekli işler yavaşlar.";
+
+		public const string Score ="Optimizasyon testindeki sürdürülebilir hesaplama hızı (milyon işlem/sn). Yüzde, en iyi denemeye göre oranıdır; yüksek olan daha güçlüdür.";
 
 		public const string AutoSwitch = "Prize takılıyken, bataryadayken ve listelediğin uygulamalar açıkken hangi profilin kendiliğinden uygulanacağını belirler.";
 
@@ -587,6 +597,33 @@ public static class Lang
 		dictionary["Erken başlatma etkinleştirildi."] = "Early start turned on.";
 		dictionary["Erken başlatma kapatıldı."] = "Early start turned off.";
 		dictionary["Erken başlatma etkin: bir sonraki açılışta profil oturum açılmadan önce uygulanır."] = "Early start is on: at the next boot the profile is applied before sign-in.";
+		dictionary["Windows işlemci ayarları"] = "Windows processor settings";
+		dictionary["Bu profil Windows güç planını yönetsin"] = "Let this profile manage the Windows power plan";
+		dictionary["Kapalıyken Windows varsayılanları kullanılır"] = "When off, Windows defaults are used";
+		dictionary["Minimum işlemci durumu"] = "Minimum processor state";
+		dictionary["Boştayken inebileceği en düşük hız · Windows varsayılanı %5"] = "Lowest speed at idle · Windows default 5 %";
+		dictionary["Maksimum frekans"] = "Maximum frequency";
+		dictionary["Hız tavanı · 1,4–4,8 GHz"] = "Clock ceiling · 1.4–4.8 GHz";
+		dictionary["Enerji tercihi"] = "Energy preference";
+		dictionary["Performans ← → verimlilik · Windows varsayılanı 33"] = "Performance ← → efficiency · Windows default 33";
+		dictionary["İşlemci boost"] = "Processor boost";
+		dictionary["Kısa yüklerde taban hızın üstüne çıkabilir"] = "May go above base clock on short loads";
+		dictionary["Taban hızda kalır · daha serin, daha yavaş"] = "Stays at base clock · cooler, slower";
+		dictionary["Windows şu an"] = "Windows now";
+		dictionary["sınırsız"] = "no cap";
+		dictionary["açık"] = "on";
+		dictionary["kapalı"] = "off";
+		dictionary["Serin"] = "Cool";
+		dictionary["En verimli"] = "Most efficient";
+		dictionary["Minimum işlemci durumu %0–100 olmalı."] = "Minimum processor state must be 0–100 %.";
+		dictionary["Maksimum frekans {0}–{1} MHz olmalı."] = "Maximum frequency must be {0}–{1} MHz.";
+		dictionary["Enerji tercihi 0–100 olmalı."] = "Energy preference must be 0–100.";
+		dictionary["Windows işlemci ayarları varsayılana döndürüldü ("] = "Windows processor settings restored to defaults (";
+		dictionary[Info.WindowsCpu] = "Windows picks the processor's speed moment to moment; the firmware and this app set the ceilings (watts, temperature, fans). This card ties that Windows choice to the profile: when the profile is applied, the settings are written to the active power plan (e.g. Balanced) and read back to verify. The plan itself is not switched. Switching to a profile with this off restores the Windows defaults.";
+		dictionary[Info.MinCpuState] = "The lowest speed the processor may drop to at idle (percent of base clock). The Windows default is 5 %; a high value keeps the processor fast and warm even at idle.";
+		dictionary[Info.MaxCpuClock] = "The highest clock the processor may reach. For everyday use 2.4–2.8 GHz is usually enough and runs noticeably cooler and quieter. Leave it off in a gaming profile.";
+		dictionary[Info.CpuEpp] = "What Windows favours when picking a speed. A low value ramps up quickly (snappy, warm); a high value is cautious (cool, battery-friendly). The Windows default is 33 plugged in and 50 on battery.";
+		dictionary[Info.CpuBoost] = "When on, the processor goes above its base clock (3.2 GHz) on short loads. Turning it off runs cooler and quieter but slows single-threaded work.";
 		En = dictionary;
 	}
 }

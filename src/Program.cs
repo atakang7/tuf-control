@@ -208,7 +208,7 @@ public static class Program
 		using AsusHardware hw = new AsusHardware(readOnly: true);
 		VerifyItem[] items = new Controller(hw, (string _) =>
 		{
-		}).Verify(profile);
+		}, null, new WindowsPower()).Verify(profile);
 		bool ok = items.All((VerifyItem v) => v.Match != false);
 		var report = new
 		{

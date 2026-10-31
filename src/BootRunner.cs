@@ -37,7 +37,7 @@ public static class BootRunner
 			}
 			using AsusHardware hardware = new AsusHardware();
 			using Thermal thermal = new Thermal();
-			Controller controller = new Controller(hardware, Log, thermal);
+			Controller controller = new Controller(hardware, Log, thermal, new WindowsPower());
 			for (int attempt = 0; attempt <= StartupRetry.Delays.Length; attempt++)
 			{
 				string[] conflicts = Machine.Conflicts();

@@ -7,11 +7,13 @@ using System.Threading;
 
 namespace TufControl;
 
-public sealed class Controller(IHardware hw, Action<string> log, IThermal? thermal = null)
+public sealed class Controller(IHardware hw, Action<string> log, IThermal? thermal = null, IWindowsPower? windows = null)
 {
 	private int? sessionBaselineTemperature;
 
 	private bool thermalWasApplied;
+
+	private bool windowsWasApplied;
 
 	private int? lastMode;
 
@@ -131,7 +133,7 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 				log("Armoury Crate / ASUSOptimization / G-Helper etkin; ayarlar üstüne yazılıp geri okunarak doğrulanacak.");
 			}
 			Capabilities cap = Probe();
-			if (!cap.Mode || (p.CustomFans && (!cap.CpuCurve || !cap.GpuCurve)) || (p.LimitPower && !cap.Power) || (p.LimitTemperature && !cap.Thermal) || (p.LimitBoost && !cap.Boost) || ((p.TuneGpu || p.LimitGpuTemp) && !cap.Gpu) || (p.GpuMode != 0 && !cap.Eco))
+			if (!cap.Mode || (p.CustomFans && (!cap.CpuCurve || !cap.GpuCurve)) || (p.LimitPower && !cap.Power) || (p.LimitTemperature && !cap.Thermal) || (p.LimitBoost && !cap.Boost) || ((p.TuneGpu || p.LimitGpuTemp) && !cap.Gpu) || (p.GpuMode != 0 && !cap.Eco) || (p.TuneWindows && windows == null))
 			{
 				return new ApplyResult(Success: false, "Seçili özelliklerden biri firmware tarafından sunulmuyor. Hiçbir ayar uygulanmadı.");
 			}
@@ -239,11 +241,13 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 					}
 				}
 				thermalWasApplied = p.LimitTemperature && !thermalDeferred;
+				ApplyWindows(p);
 				VerifyItem[] mismatched = Verify(p, thermalDeferred).Where((VerifyItem v) => v.Match == false).ToArray();
 				if (mismatched.Length != 0)
 				{
 					log("Geri okuma eşleşmedi (" + Describe(mismatched) + "); bir kez daha yazılıyor.");
 					WriteAll();
+					ApplyWindows(p);
 					if (ReassertDelayMs > 0)
 					{
 						Thread.Sleep(350);
@@ -256,7 +260,7 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 						return new ApplyResult(Success: false, fail);
 					}
 				}
-				string msg ="Mod ve seçili fan/güç ayarları firmware tarafından kabul edildi (aktif değer geri okuması yok)." + (p.LimitTemperature ? " CPU sıcaklık limiti SMU tablosundan doğrulandı." : "") + gpuNote + (thermalDeferred ? " CPU sıcaklık hedefi, sürücü hazır olunca uygulanacak." : "");
+				string msg ="Mod ve seçili fan/güç ayarları firmware tarafından kabul edildi (aktif değer geri okuması yok)." + (p.LimitTemperature ? " CPU sıcaklık limiti SMU tablosundan doğrulandı." : "") + (p.TuneWindows ? " Windows işlemci ayarları güç planından geri okunup doğrulandı." : "") + gpuNote + (thermalDeferred ? " CPU sıcaklık hedefi, sürücü hazır olunca uygulanacak." : "");
 				log(p.Name + ": " + msg);
 				return new ApplyResult(Success: true, msg, GpuBusy: false, thermalDeferred);
 			}
@@ -349,6 +353,38 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 		}
 	}
 
+	// Writes the profile's Windows processor settings to the active power plan. A profile that leaves
+	// them off hands back Windows defaults, but only if this session changed them, so a cap from one
+	// profile never sticks to the next.
+	private void ApplyWindows(Profile p)
+	{
+		if (windows == null)
+		{
+			return;
+		}
+		try
+		{
+			if (p.TuneWindows)
+			{
+				WindowsCpu v = WindowsCpu.From(p);
+				windows.Write(v, v);
+				windowsWasApplied = true;
+				log("Windows işlemci ayarları yazıldı (" + windows.PlanName + "): " + v.Describe());
+			}
+			else if (windowsWasApplied)
+			{
+				windows.Write(WindowsCpu.AcDefaults, WindowsCpu.DcDefaults);
+				windowsWasApplied = false;
+				log("Windows işlemci ayarları varsayılana döndürüldü (" + windows.PlanName + ").");
+			}
+		}
+		catch (Exception ex)
+		{
+			// Verify reports the mismatch; firmware settings stay applied.
+			log("Windows işlemci ayarları yazılamadı: " + ex.Message);
+		}
+	}
+
 	// Reads back every setting the firmware exposes and compares it to the profile.
 	// Only GPU mode and the CPU temperature limit (SMU) have a real readback; mode, power
 	// limits and fan curves are confirmed by the firmware accepting the write.
@@ -395,6 +431,21 @@ public sealed class Controller(IHardware hw, Action<string> log, IThermal? therm
 			catch (Exception ex)
 			{
 				items.Add(new VerifyItem("CPU sıcaklık sınırı", $"{p.CpuTarget} °C", ex.Message, null));
+			}
+		}
+		if (p.TuneWindows && windows != null)
+		{
+			WindowsCpu expected2 = WindowsCpu.From(p);
+			try
+			{
+				WindowsCpu ac = windows.Read(ac: true);
+				WindowsCpu dc = windows.Read(ac: false);
+				string actual3 = (ac == dc) ? ac.Describe() : ("AC " + ac.Describe() + " / DC " + dc.Describe());
+				items.Add(new VerifyItem("Windows işlemci ayarları", expected2.Describe(), actual3, ac == expected2 && dc == expected2));
+			}
+			catch (Exception ex2)
+			{
+				items.Add(new VerifyItem("Windows işlemci ayarları", expected2.Describe(), ex2.Message, false));
 			}
 		}
 		return items.ToArray();

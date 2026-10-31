@@ -24,6 +24,10 @@ public sealed class Profile
 
 	public const int MinGpuTarget = 65;
 
+	public const int MinCpuClock = 1400;
+
+	public const int MaxCpuClock = 4800;
+
 	public string Name { get; set; } = "Dengeli";
 
 	public int Mode { get; set; }
@@ -53,6 +57,19 @@ public sealed class Profile
 	public int GpuMode { get; set; }
 
 	public int GpuTempTarget { get; set; } = 87;
+
+	// Windows power plan (processor) settings, written to the active plan when this profile is applied.
+	public bool TuneWindows { get; set; }
+
+	public int MinCpuState { get; set; } = 5;
+
+	public bool LimitCpuClock { get; set; }
+
+	public int CpuClockMhz { get; set; } = 2600;
+
+	public bool CpuBoost { get; set; } = true;
+
+	public int CpuEpp { get; set; } = 33;
 
 	public FanPoint[] Cpu { get; set; } = DefaultCurve();
 
@@ -139,6 +156,21 @@ public sealed class Profile
 		if ((mode < 0 || mode > 2) ? true : false)
 		{
 			throw new InvalidDataException("Geçersiz GPU modu.");
+		}
+		mode = MinCpuState;
+		if ((mode < 0 || mode > 100) ? true : false)
+		{
+			throw new InvalidDataException("Minimum işlemci durumu %0–100 olmalı.");
+		}
+		mode = CpuClockMhz;
+		if ((mode < 1400 || mode > 4800) ? true : false)
+		{
+			throw new InvalidDataException($"Maksimum frekans {1400}–{4800} MHz olmalı.");
+		}
+		mode = CpuEpp;
+		if ((mode < 0 || mode > 100) ? true : false)
+		{
+			throw new InvalidDataException("Enerji tercihi 0–100 olmalı.");
 		}
 		if (GpuMode == 2 && (TuneGpu || LimitGpuTemp))
 		{

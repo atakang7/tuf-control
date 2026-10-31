@@ -678,6 +678,95 @@
                         <local:PowerChart x:Name="PowerChart" Height="230" Margin="0,20,0,0" />
                       </StackPanel>
                     </Border>
+                    <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                      <StackPanel>
+                        <DockPanel>
+                          <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Name="WinLiveClock" Text="—" Style="{StaticResource ValText}" HorizontalAlignment="Right" />
+                            <TextBlock Name="WinLivePlan" Text="—" Style="{StaticResource T.Caption}" HorizontalAlignment="Right" />
+                          </StackPanel>
+                          <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE770;" Style="{StaticResource HeadIcon}" Foreground="{StaticResource CpuBrush}" />
+                            <local:InfoLabel Text="Windows işlemci ayarları" Info="{x:Static local:Lang+Info.WindowsCpu}" LabelStyle="{StaticResource CardHead}" />
+                          </StackPanel>
+                        </DockPanel>
+                        <CheckBox Name="WinEnabled" Margin="0,18,0,0">
+                          <StackPanel>
+                            <TextBlock Text="Bu profil Windows güç planını yönetsin" Style="{StaticResource T.Label}" />
+                            <TextBlock Text="Kapalıyken Windows varsayılanları kullanılır" Style="{StaticResource T.Caption}" />
+                          </StackPanel>
+                        </CheckBox>
+                        <StackPanel Name="WinBody" Margin="0,6,0,0">
+                          <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition />
+                              <ColumnDefinition Width="24" />
+                              <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                              <local:InfoLabel Text="Minimum işlemci durumu" Info="{x:Static local:Lang+Info.MinCpuState}" LabelStyle="{StaticResource T.Label}" HorizontalAlignment="Left" />
+                              <TextBlock Text="Boştayken inebileceği en düşük hız · Windows varsayılanı %5" Style="{StaticResource T.Caption}" />
+                              <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                  <ColumnDefinition />
+                                  <ColumnDefinition Width="72" />
+                                </Grid.ColumnDefinitions>
+                                <Slider Name="WinMinSlider" Minimum="0" Maximum="100" Value="5" SmallChange="1" LargeChange="5" IsSnapToTickEnabled="True" TickFrequency="1" />
+                                <TextBlock Grid.Column="1" Style="{StaticResource ValText}" Text="{Binding Value, ElementName=WinMinSlider, StringFormat='{}{0:0} %'}" />
+                              </Grid>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                              <CheckBox Name="WinClockEnabled">
+                                <StackPanel>
+                                  <local:InfoLabel Text="Maksimum frekans" Info="{x:Static local:Lang+Info.MaxCpuClock}" LabelStyle="{StaticResource T.Label}" />
+                                  <TextBlock Text="Hız tavanı · 1,4–4,8 GHz" Style="{StaticResource T.Caption}" />
+                                </StackPanel>
+                              </CheckBox>
+                              <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                  <ColumnDefinition />
+                                  <ColumnDefinition Width="72" />
+                                </Grid.ColumnDefinitions>
+                                <Slider Name="WinClockSlider" Minimum="1400" Maximum="4800" Value="2600" SmallChange="100" LargeChange="200" IsSnapToTickEnabled="True" TickFrequency="100" />
+                                <TextBlock Name="WinClockValue" Grid.Column="1" Style="{StaticResource ValText}" Text="2.6 GHz" />
+                              </Grid>
+                            </StackPanel>
+                          </Grid>
+                          <Grid Margin="0,18,0,0">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition />
+                              <ColumnDefinition Width="24" />
+                              <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                              <local:InfoLabel Text="Enerji tercihi" Info="{x:Static local:Lang+Info.CpuEpp}" LabelStyle="{StaticResource T.Label}" HorizontalAlignment="Left" />
+                              <TextBlock Text="Performans ← → verimlilik · Windows varsayılanı 33" Style="{StaticResource T.Caption}" />
+                              <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                  <ColumnDefinition />
+                                  <ColumnDefinition Width="110" />
+                                </Grid.ColumnDefinitions>
+                                <Slider Name="WinEppSlider" Minimum="0" Maximum="100" Value="33" SmallChange="1" LargeChange="10" IsSnapToTickEnabled="True" TickFrequency="1" />
+                                <TextBlock Name="WinEppValue" Grid.Column="1" Style="{StaticResource ValText}" Text="Dengeli · 33" />
+                              </Grid>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                              <CheckBox Name="WinBoost">
+                                <StackPanel>
+                                  <local:InfoLabel Text="İşlemci boost" Info="{x:Static local:Lang+Info.CpuBoost}" LabelStyle="{StaticResource T.Label}" />
+                                  <TextBlock Name="WinBoostNote" Text="Kısa yüklerde taban hızın üstüne çıkabilir" Style="{StaticResource T.Caption}" />
+                                </StackPanel>
+                              </CheckBox>
+                            </StackPanel>
+                          </Grid>
+                        </StackPanel>
+                        <Border Style="{StaticResource Divider}" />
+                        <DockPanel>
+                          <TextBlock Name="WinLiveNow" DockPanel.Dock="Right" Text="—" Style="{StaticResource ValText}" />
+                          <TextBlock Text="Windows şu an" Style="{StaticResource KeyText}" />
+                        </DockPanel>
+                      </StackPanel>
+                    </Border>
                   </StackPanel>
                   <StackPanel Grid.Column="2">
                     <Border Style="{StaticResource Card}">

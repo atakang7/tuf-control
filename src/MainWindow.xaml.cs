@@ -69,6 +69,8 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 
 	private readonly Thermal thermal;
 
+	private readonly WindowsPower windowsPower = new WindowsPower();
+
 	private readonly NvidiaSensor nvidia = new NvidiaSensor();
 
 	private readonly SystemSensor system = new SystemSensor();
@@ -1160,7 +1162,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			{
 				mainWindow.Log(message);
 			}));
-		}, thermal)
+		}, thermal, windowsPower)
 		{
 			GpuBusy = GpuBusyCheck
 		};
@@ -1282,6 +1284,33 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 				{
 					box.IsChecked = true;
 				}
+			};
+		}
+		System.Windows.Controls.CheckBox[] winBoxes = new System.Windows.Controls.CheckBox[3] { WinEnabled, WinClockEnabled, WinBoost };
+		foreach (System.Windows.Controls.CheckBox winBox in winBoxes)
+		{
+			winBox.Checked += (object _, RoutedEventArgs _) =>
+			{
+				mainWindow.UpdateWindowsCard();
+				mainWindow.Dirty();
+			};
+			winBox.Unchecked += (object _, RoutedEventArgs _) =>
+			{
+				mainWindow.UpdateWindowsCard();
+				mainWindow.Dirty();
+			};
+		}
+		Slider[] winSliders = new Slider[3] { WinMinSlider, WinClockSlider, WinEppSlider };
+		foreach (Slider winSlider in winSliders)
+		{
+			winSlider.ValueChanged += (object o, RoutedPropertyChangedEventArgs<double> _) =>
+			{
+				if (!mainWindow.loading && o == mainWindow.WinClockSlider && mainWindow.WinClockEnabled.IsChecked != true)
+				{
+					mainWindow.WinClockEnabled.IsChecked = true;
+				}
+				mainWindow.UpdateWindowsCard();
+				mainWindow.Dirty();
 			};
 		}
 		ProfileName.TextChanged += (object _, TextChangedEventArgs _) =>
@@ -1814,6 +1843,34 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		}
 	}
 
+	private void UpdateWindowsCard()
+	{
+		if (WinBody == null)
+		{
+			return;
+		}
+		WinBody.IsEnabled = WinEnabled.IsChecked == true;
+		WinBody.Opacity = (WinBody.IsEnabled ? 1.0 : 0.45);
+		WinClockSlider.Opacity = ((WinClockEnabled.IsChecked == true) ? 1.0 : 0.45);
+		WinClockValue.Text = ((WinClockEnabled.IsChecked == true) ? $"{WinClockSlider.Value / 1000.0:0.0} GHz" : Lang.T("sınırsız"));
+		double epp = WinEppSlider.Value;
+		WinEppValue.Text = Lang.T((epp <= 20.0) ? "Performans" : ((epp <= 45.0) ? "Dengeli" : ((epp <= 70.0) ? "Serin" : "En verimli"))) + $" · {epp:0}";
+		WinBoostNote.Text = Lang.T((WinBoost.IsChecked == true) ? "Kısa yüklerde taban hızın üstüne çıkabilir" : "Taban hızda kalır · daha serin, daha yavaş");
+	}
+
+	private void ShowWindowsLive(bool onAc)
+	{
+		try
+		{
+			WinLivePlan.Text = windowsPower.PlanName;
+			WinLiveNow.Text = windowsPower.Read(onAc).Describe();
+		}
+		catch (Exception ex)
+		{
+			WinLiveNow.Text = ex.Message;
+		}
+	}
+
 	private void UpdateSummary()
 	{
 		if (SumCpuTarget != null)
@@ -1994,6 +2051,13 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		toggleButton2.IsChecked = true;
 		TempLimitEnabled.IsChecked = p.LimitTemperature;
 		TempSlider.Value = p.CpuTarget;
+		WinEnabled.IsChecked = p.TuneWindows;
+		WinMinSlider.Value = p.MinCpuState;
+		WinClockEnabled.IsChecked = p.LimitCpuClock;
+		WinClockSlider.Value = p.CpuClockMhz;
+		WinBoost.IsChecked = p.CpuBoost;
+		WinEppSlider.Value = p.CpuEpp;
+		UpdateWindowsCard();
 		loading = was;
 		editDirty = false;
 		UpdatePowerChart();
@@ -2024,7 +2088,13 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 			GpuTempTarget = (int)GpuTargetSlider.Value,
 			GpuMode = ((GpuModeStd.IsChecked == true) ? 1 : ((GpuModeEco.IsChecked == true) ? 2 : 0)),
 			LimitTemperature = (TempLimitEnabled.IsChecked == true),
-			CpuTarget = (int)TempSlider.Value
+			CpuTarget = (int)TempSlider.Value,
+			TuneWindows = (WinEnabled.IsChecked == true),
+			MinCpuState = (int)WinMinSlider.Value,
+			LimitCpuClock = (WinClockEnabled.IsChecked == true),
+			CpuClockMhz = (int)WinClockSlider.Value,
+			CpuBoost = (WinBoost.IsChecked == true),
+			CpuEpp = (int)WinEppSlider.Value
 		};
 	}
 
@@ -2677,6 +2747,8 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 				text2 = "—";
 			}
 			cpuClock.Text = text2;
+			WinLiveClock.Text = text2;
+			ShowWindowsLive(latest.OnAc ?? true);
 			GpuValue.Text = gpu?.ToString() ?? "—";
 			ShowTemp(GpuTempBar, gpu);
 			TextBlock gpuUsage = GpuUsage;

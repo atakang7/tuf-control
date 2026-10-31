@@ -34,11 +34,21 @@ flowchart LR
     C -->|allow-listed endpoints| ATK[ASUS ATKACPI driver] --> FW[Firmware: fans · power · GPU mode]
     C -->|thermal limit| P[PawnIO + RyzenSMU] --> SMU[CPU SMU]
     C -. read back & verify .-> ATK
+    C -->|per-profile processor settings| WP[Windows power plan · powrprof]
     Watch[30 s drift watch] -->|re-apply| C
 ```
 
-Only GPU mode and the CPU temperature limit have a true readback. Fan curves, performance mode
-and power limits are confirmed by the firmware accepting the write.
+GPU mode, the CPU temperature limit and the Windows processor settings have a true readback. Fan
+curves, performance mode and power limits are confirmed by the firmware accepting the write.
+
+## Windows processor settings
+
+The firmware sets the ceilings (watts, temperature, fans); Windows picks the clock inside them. A
+profile can take over that Windows side: minimum processor state, maximum frequency, processor boost
+and energy performance preference. They are written to the plugged-in and battery values of the
+active power plan (the plan itself is never switched), read back, and re-applied by the drift watch
+if something else changes them. Switching to a profile that leaves this off restores the Windows
+defaults, but only if TUF Control changed them in this session.
 
 ## Safety
 
