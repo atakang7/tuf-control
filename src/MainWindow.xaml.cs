@@ -2684,6 +2684,14 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		goto IL_0711;
 	}
 
+	// Prefers the live SMU Tctl over the ASUS EC value, which is filtered and sticks on plateaus.
+	private Snapshot Sample()
+	{
+		Snapshot s = Machine.Sample(hardware);
+		int? tctl = thermal.ReadTemperature();
+		return tctl.HasValue ? (s with { CpuTemp = tctl }) : s;
+	}
+
 	public async Task RefreshAsync(bool wait = false)
 	{
 		if (wait)
@@ -2696,7 +2704,7 @@ public partial class MainWindow : Window, IComponentConnector, IStyleConnector
 		}
 		try
 		{
-			(Snapshot, string[], Capabilities, SystemStats) data = await Task.Run(() => (Machine.Sample(hardware), Machine.Conflicts(), controller.Probe(), system.Read()));
+			(Snapshot, string[], Capabilities, SystemStats) data = await Task.Run(() => (Sample(), Machine.Conflicts(), controller.Probe(), system.Read()));
 			latest = data.Item1;
 			conflicts = data.Item2;
 			capabilities = data.Item3;

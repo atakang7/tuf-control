@@ -18,6 +18,10 @@ public sealed class Thermal : IThermal, IDisposable
 
 	private readonly bool readOnly;
 
+	private readonly object gate = new object();
+
+	private bool sensorFailed;
+
 	public bool Available
 	{
 		get
@@ -41,6 +45,15 @@ public sealed class Thermal : IThermal, IDisposable
 		{
 			throw new InvalidOperationException("Salt okunur oturum: SMU modülü yüklenmedi.");
 		}
+		lock (gate)
+		{
+			Connect();
+			return Read();
+		}
+	}
+
+	private void Connect()
+	{
 		if (!Available)
 		{
 			throw new IOException("Mevcut PawnIO sürücüsü bulunamadı. CPU sıcaklık kontrolü kullanılamıyor.");
@@ -69,7 +82,37 @@ public sealed class Thermal : IThermal, IDisposable
 			}
 			ready = true;
 		}
-		return Read();
+	}
+
+	// Live die temperature (Tctl) from THM_TCON_CUR_TMP over SMN. The ASUS firmware value
+	// (0x00120094) is an EC copy that is heavily filtered and sits on plateaus for minutes.
+	// Returns null when the SMU session cannot be opened, so callers fall back to the EC value.
+	public int? ReadTemperature()
+	{
+		if (readOnly || sensorFailed)
+		{
+			return null;
+		}
+		lock (gate)
+		{
+			try
+			{
+				Connect();
+				ulong[] value = new ulong[1];
+				if (!io.Execute("ioctl_read_smu_register", new ulong[1] { 366592uL }, value))
+				{
+					return null;
+				}
+				uint raw = (uint)value[0];
+				double temp = (double)(raw >> 21) * 0.125 - (((raw & 0x80000) != 0) ? 49.0 : 0.0);
+				return (temp > 0.0 && temp <= 120.0) ? new int?((int)Math.Round(temp)) : null;
+			}
+			catch (Exception)
+			{
+				sensorFailed = true;
+				return null;
+			}
+		}
 	}
 
 	public int Read()
@@ -78,6 +121,14 @@ public sealed class Thermal : IThermal, IDisposable
 		{
 			throw new IOException("SMU oturumu hazır değil.");
 		}
+		lock (gate)
+		{
+			return ReadLimit();
+		}
+	}
+
+	private int ReadLimit()
+	{
 		ulong[] info = new ulong[2];
 		if (!io.Execute("ioctl_resolve_pm_table", null, info))
 		{
@@ -134,6 +185,14 @@ public sealed class Thermal : IThermal, IDisposable
 		{
 			throw new InvalidOperationException("SMU yazma yetkisi yok.");
 		}
+		lock (gate)
+		{
+			SendLocked(value);
+		}
+	}
+
+	private void SendLocked(int value)
+	{
 		using Mutex mutex = new Mutex(initiallyOwned: false, "Global\\TufControl.SMU");
 		bool acquired = false;
 		try
