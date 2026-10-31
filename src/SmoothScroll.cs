@@ -26,7 +26,7 @@ public static class SmoothScroll
 	private const double PixelsPerDelta = 100.0 / 120.0;
 
 	// Time constant of the glide; ~95 % of the distance is covered in 3 × this.
-	private const double GlideSeconds = 0.06;
+	private const double GlideSeconds = 0.12;
 
 	private static readonly ConditionalWeakTable<ScrollViewer, State> states = new ConditionalWeakTable<ScrollViewer, State>();
 
