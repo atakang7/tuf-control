@@ -1,67 +1,52 @@
-# TUF Control: details
+# TUF Control details
 
-## Requirements (checked by [`src/Platform.cs`](../src/Platform.cs))
+Build, command-line options and firmware limits for the FA607NUQ.
 
-| | Rule | If not met |
-|---|---|---|
-| Windows | 10 2004 (build 19041) or newer, x64 | App won't start |
-| Laptop | ASUS TUF Gaming A16 **FA607NUQ** | Runs read-only (monitoring only) |
-| BIOS | FA607NUQ.300 tested | Runs, warning in the log |
-| ASUS driver | ASUS System Control Interface v3 (`ATKACPI`) | No fan / power control |
-| CPU temperature target | Ryzen "Rembrandt" CPU + [PawnIO](https://github.com/namazso/PawnIO) 2.x | Only that feature is off |
-| GPU readings | NVIDIA driver | GPU sensors show "—" |
-| Linux / macOS | Not supported; use [asusctl](https://gitlab.com/asus-linux/asusctl) | — |
+## Run from source
 
-Tested on: TUF Gaming A16 FA607NUQ, BIOS FA607NUQ.300, Ryzen 7 170, RTX 4050 Laptop
-(driver 32.0.15.9162), Windows 11 Pro 26H2 build 26300.9711, ASUS System Control Interface
-v3 3.1.73.0, PawnIO 2.2.0.0.
-
-## Command line
-
-| Command | What it does |
-|---|---|
-| `TufControl.exe --verify [profile]` | Compares live firmware state with the profile, writes `verify.json`; exit `0` = match |
-| `TufControl.exe --diagnose [file]` | Hardware / platform report for bug reports |
-| `TufControl.exe --read-only` | UI that never writes to hardware |
-| `TufControl.exe --render <folder> [--lang en]` | Renders every page to PNG |
-
-## How it works
-
-```mermaid
-flowchart LR
-    UI[UI · profiles · rules] --> C[Controller]
-    Boot[Early-boot service] --> C
-    C -->|allow-listed endpoints| ATK[ASUS ATKACPI driver] --> FW[Firmware: fans · power · GPU mode]
-    C -->|thermal limit| P[PawnIO + RyzenSMU] --> SMU[CPU SMU]
-    C -. read back & verify .-> ATK
-    C -->|per-profile processor settings| WP[Windows power plan · powrprof]
-    Watch[30 s drift watch] -->|re-apply| C
-```
-
-GPU mode, the CPU temperature limit and the Windows processor settings have a true readback. Fan
-curves, performance mode and power limits are confirmed by the firmware accepting the write.
-
-## Windows processor settings
-
-The firmware sets the ceilings (watts, temperature, fans); Windows picks the clock inside them. A
-profile can take over that Windows side: minimum processor state, maximum frequency, processor boost
-and energy performance preference. They are written to the plugged-in and battery values of the
-active power plan (the plan itself is never switched), read back, and re-applied by the drift watch
-if something else changes them. Switching to a profile that leaves this off restores the Windows
-defaults, but only if TUF Control changed them in this session.
-
-## Safety
-
-- Writes only on verified models, and only to an allow-list of ACPI endpoints.
-- Power and temperature values are clamped in the UI, the profile validation and the write layer.
-- Fan curves keep at least 30 % from 70 °C, 70 % from 80 °C and 100 % from 90 °C.
-- The firmware's own thermal protection always stays on.
-
-## Build from source
+Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), then use administrator PowerShell on Windows x64:
 
 ```powershell
+git clone https://github.com/atakang7/tuf-control.git
+cd tuf-control
+dotnet build src/TufControl.csproj -c Release
 dotnet publish src/TufControl.csproj -c Release -o publish
-.\Install.ps1   # administrator
+.\Install.ps1 -Source .\publish
 ```
 
-Adding a laptop model: see [CONTRIBUTING.md](../CONTRIBUTING.md).
+## Commands
+
+| option | result |
+|---|---|
+| `--verify [profile]` | Writes `verify.json` under `%LOCALAPPDATA%\TufControl`; exit `0` if readable values match |
+| `--diagnose [file]` | Writes hardware diagnostics as JSON |
+| `--read-only` | Starts the UI without hardware writes |
+| `--render <folder> [--lang en]` | Captures UI pages as PNG files without hardware writes |
+
+## Config
+
+Profile values are stored in `%LOCALAPPDATA%\TufControl\profiles.json` and validated before writes.
+
+| var | default | what |
+|---|---|---|
+| `LimitPower` | `false` | Enables the CPU power cap |
+| `CpuWatts` | `35` | 15-45 W cap when enabled |
+| `LimitTemperature` | `false` | Enables the CPU temperature limit |
+| `CpuTarget` | `85` | 60-90 C limit when enabled |
+| `TuneWindows` | `false` | Changes the active Windows power plan |
+| `GpuMode` | `0` | Leaves GPU mode unchanged |
+
+## Limits
+
+- Hardware writes require `Platform.VerifiedModels`; only FA607NUQ is verified.
+- The tested BIOS is FA607NUQ.300; other versions produce a warning.
+- `AsusHardware` writes only to an allow-list of `ATKACPI` endpoints.
+- `Thermal` requires a Rembrandt CPU and PawnIO 2.x for temperature limits.
+- GPU mode, CPU temperature and `WindowsPower` settings have readback; fan curves and power caps do not.
+- Fan curves require at least 30% at 70 C, 70% at 80 C and 100% at 90 C.
+- `WindowsPower` writes AC and DC values on the active plan and restores defaults only after this session changed them.
+- The 30-second drift check reapplies settings that no longer match.
+
+Tested with Windows 11 Pro 26H2 (build 26300.9711), Ryzen 7 170, RTX 4050, ASUS System Control Interface v3 3.1.73.0 and PawnIO 2.2.0.0.
+
+Adding a model: [CONTRIBUTING.md](../CONTRIBUTING.md).
