@@ -2,7 +2,7 @@
 
 ## Build
 
-Requirements: Windows 10 2004+ x64 and the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0). The SDK version is set in [`global.json`](global.json).
+Requirements: Windows 10 2004+ x64 and the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
 
 ```powershell
 dotnet build src/TufControl.csproj -c Release
@@ -19,7 +19,7 @@ hardware. Use it for screenshots in pull requests.
 2. Export `--diagnose` and check that `Capabilities` reports the endpoints you need.
 3. Add the model to `Platform.VerifiedModels` and its BIOS to `Platform.VerifiedBios` (`src/Platform.cs`).
 4. Apply every feature once, run `TufControl.exe --verify` and include `verify.json` in the pull request.
-5. Update the model and BIOS information under *Limitations* in `README.md`.
+5. Update the compatibility table in `README.md`.
 
 ## Rules
 
