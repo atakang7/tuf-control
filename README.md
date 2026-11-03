@@ -1,51 +1,37 @@
-# TUF Control
+<p align="center">
+  <img src="docs/banner.svg" alt="TUF Control" width="100%">
+</p>
 
-Windows WPF app for ASUS TUF Gaming A16 FA607NUQ owners to manage fan curves, power limits and GPU modes.
+Fan curves, power limits and GPU mode for the ASUS TUF Gaming A16 (FA607NUQ), without Armoury Crate.
 
-```text
-+------------+  profile  +------------+  calls  +--------------+  ACPI  +---------+
-| MainWindow | --------> | Controller | ------> | AsusHardware | -----> | ATKACPI |
-+------------+           +------------+         +--------------+        +---------+
-                              |
-                         +----+-------+
-                         |            |
-                         v SMU        v plan
-                    +---------+  +--------------+
-                    | Thermal |  | WindowsPower |
-                    +---------+  +--------------+
-                         |
-                         v driver
-                    +--------+
-                    | PawnIO |
-                    +--------+
-```
+## Results
 
-## Quick start
+Averages measured on my TUF A16 FA607NUQ over 7 days, stock firmware vs. my TUF Control profiles.
 
-On x64 Windows with the .NET 10 SDK, run these commands from an elevated PowerShell window:
+| | Stock firmware | TUF Control |
+|---|---|---|
+| **Plugged in: CPU temp** | 59.1 °C | **55.7 °C** |
+| **Plugged in: CPU fan** | 2,907 rpm | **2,372 rpm (−18 %)** |
+| **On battery: CPU fan** | 5,185 rpm | **771 rpm (−85 %)** |
+| **On battery: power drain** | 14.4 W | **10.9 W (−24 %)** |
 
-```powershell
-dotnet publish src/TufControl.csproj -c Release -o publish
-.\Install.ps1
-```
+Recorded time: plugged in 5.6 h stock / 73.7 h TUF Control, on battery 0.5 h / 1.5 h.
+Trade-off: with the 15 W plugged-in profile the average CPU clock is 2.8 GHz instead of 3.3 GHz.
+Raise the limit in a second profile for gaming.
 
-For the prebuilt ZIP, use the [release install guide](docs/how-to/install.md).
+<img src="docs/screenshots/dashboard.png" alt="TUF Control dashboard">
 
-## Layout
+## Install
 
-| Path | What it is |
-|---|---|
-| [src/](src/README.md) | WPF UI, profile controller, hardware adapters and startup service |
+1. Install the [.NET 10 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/10.0).
+2. Download and extract [`TufControl-win-x64.zip`](https://github.com/atakang7/tuf-control/releases/latest).
+3. In that folder, open **Terminal (Admin)** and run:
+   ```powershell
+   Get-ChildItem | Unblock-File; .\Install.ps1
+   ```
 
-## Docs
+It starts at every sign-in. Remove it with `.\Uninstall.ps1`.
 
-- [Documentation index](docs/README.md)
-- [Build from source](docs/how-to/build.md)
-- [CLI and data files](docs/reference/cli.md)
-- [Architecture](docs/explanation/architecture.md)
+---
 
-## Limits
-
-- Hardware writes are restricted to the FA607NUQ. Other models are read-only.
-- The CPU temperature target requires PawnIO and a supported Ryzen CPU.
-- Adapted G-Helper code is covered by [GPL-3.0](LICENSE); see [third-party notices](THIRD-PARTY-NOTICES.md).
+[Details](docs/details.md) · [GPL-3.0](LICENSE) · Based on [G-Helper](https://github.com/seerge/g-helper) · Not affiliated with ASUS

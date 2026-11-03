@@ -37,11 +37,6 @@ public static class Program
 		{
 			return BootService.Run(args);
 		}
-		int renderIndex = Array.IndexOf(args, "--render");
-		if (renderIndex >= 0 && (renderIndex + 1 >= args.Length || args[renderIndex + 1].StartsWith("--", StringComparison.Ordinal)))
-		{
-			return 2;
-		}
 		bool readOnly = args.Contains("--read-only") || args.Contains("--diagnose") || args.Contains("--render");
 		if (args.Contains("--diagnose"))
 		{
@@ -134,7 +129,8 @@ public static class Program
 			};
 			if (args.Contains("--render"))
 			{
-				string dir = Path.GetFullPath(args[renderIndex + 1]);
+				int index2 = Array.IndexOf(args, "--render");
+				string dir = Path.GetFullPath(args[index2 + 1]);
 				Directory.CreateDirectory(dir);
 				window.ShowActivated = false;
 				window.ShowInTaskbar = false;
