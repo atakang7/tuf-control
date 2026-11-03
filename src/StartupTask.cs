@@ -146,7 +146,7 @@ public static class StartupTask
 		if (!p.WaitForExit(10000))
 		{
 			p.Kill(entireProcessTree: true);
-			throw new TimeoutException("sc.exe 10 saniye içinde tamamlanmadı.");
+			throw new System.TimeoutException("sc.exe 10 saniye içinde tamamlanmadı.");
 		}
 		return p.ExitCode;
 	}
