@@ -62,8 +62,9 @@ public static class BootRunner
 						hardware.Write(1114149u, Profile.Encode(profile.Gpu));
 						Log("Fan eğrisi hemen yazıldı (" + Up() + ").");
 					}
-					catch
+					catch (Exception ex)
 					{
+						Log("İlk fan yazma denemesi başarısız: " + ex.Message);
 					}
 				}
 				ApplyResult result = controller.Apply(profile, modelAllowed: true, conflicts.Length != 0, deferThermal: true);

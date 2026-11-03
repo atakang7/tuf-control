@@ -1,6 +1,6 @@
 # TUF Control: details
 
-## Requirements (enforced in [`src/Platform.cs`](../src/Platform.cs))
+## Requirements (checked by [`src/Platform.cs`](../src/Platform.cs))
 
 | | Rule | If not met |
 |---|---|---|
