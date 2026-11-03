@@ -141,13 +141,11 @@ public static class StartupTask
 		using Process p = Process.Start(new ProcessStartInfo("sc.exe", arguments)
 		{
 			CreateNoWindow = true,
-			UseShellExecute = false
-		}) ?? throw new IOException("sc.exe başlatılamadı.");
-		if (!p.WaitForExit(10000))
-		{
-			p.Kill(entireProcessTree: true);
-			throw new System.TimeoutException("sc.exe 10 saniye içinde tamamlanmadı.");
-		}
+			UseShellExecute = false,
+			RedirectStandardOutput = true
+		});
+		p.StandardOutput.ReadToEnd();
+		p.WaitForExit();
 		return p.ExitCode;
 	}
 

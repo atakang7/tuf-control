@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace TufControl;
 
@@ -47,7 +48,14 @@ public sealed class Settings
 
 	public void Validate()
 	{
-		if (Version != 1 || Profiles == null || Profiles.Count < 1 || Profiles.Count > 20)
+		bool flag = Version != 1 || Profiles == null;
+		if (!flag)
+		{
+			int count = Profiles.Count;
+			bool flag2 = ((count < 1 || count > 20) ? true : false);
+			flag = flag2;
+		}
+		if (flag)
 		{
 			throw new InvalidDataException("Profil dosyası biçimi desteklenmiyor.");
 		}
@@ -63,17 +71,39 @@ public sealed class Settings
 		{
 			throw new InvalidDataException("Priz/batarya profili bulunamadı.");
 		}
-		AppRules ??= new List<AppRule>();
-		if (Language != "tr" && Language != "en")
+		if (AppRules == null)
+		{
+			List<AppRule> list = (AppRules = new List<AppRule>());
+		}
+		string language = Language;
+		if ((!(language == "tr") && !(language == "en")) || 1 == 0)
 		{
 			Language = "tr";
 		}
-		if (StartupMode != "auto" && StartupMode != "last" && StartupMode != "profile" && StartupMode != "firmware")
+		switch (StartupMode)
+		{
+		case "auto":
+		case "last":
+		case "profile":
+		case "firmware":
+			flag = true;
+			break;
+		default:
+			flag = false;
+			break;
+		}
+		if (!flag)
 		{
 			StartupMode = "auto";
 		}
-		StartupProfile ??= "";
-		LastProfile ??= "";
+		if (StartupProfile == null)
+		{
+			language = (StartupProfile = "");
+		}
+		if (LastProfile == null)
+		{
+			language = (LastProfile = "");
+		}
 		if (AppRules.Count > 20)
 		{
 			throw new InvalidDataException("En fazla 20 uygulama kuralı olabilir.");
@@ -89,7 +119,7 @@ public sealed class Settings
 				throw new InvalidDataException(r.Process + " kuralının profili bulunamadı.");
 			}
 		}
-		if (AppRules.Select((AppRule r) => r.Process).Distinct(StringComparer.OrdinalIgnoreCase).Count() != AppRules.Count)
+		if (AppRules.Select((AppRule appRule) => appRule.Process).Distinct(StringComparer.OrdinalIgnoreCase).Count() != AppRules.Count)
 		{
 			throw new InvalidDataException("Aynı uygulama için birden fazla kural var.");
 		}
@@ -111,7 +141,14 @@ public sealed class Settings
 
 	public Settings()
 	{
-		Profiles = new List<Profile> { new Profile { Name = "Profilim" } };
+		int num = 1;
+		List<Profile> list = new List<Profile>(num);
+		CollectionsMarshal.SetCount(list, num);
+		CollectionsMarshal.AsSpan(list)[0] = new Profile
+		{
+			Name = "Profilim"
+		};
+		Profiles = list;
 		AcProfile = "Profilim";
 		BatteryProfile = "Profilim";
 		AppRules = new List<AppRule>();

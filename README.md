@@ -1,64 +1,37 @@
-# TUF Control
+<p align="center">
+  <img src="docs/banner.svg" alt="TUF Control" width="100%">
+</p>
 
-TUF Control applies fan, power and GPU profiles to the ASUS TUF Gaming A16 FA607NUQ on Windows.
+Fan curves, power limits and GPU mode for the ASUS TUF Gaming A16 (FA607NUQ), without Armoury Crate.
 
-```text
-+------------+  profile  +------------+  writes  +--------------+  calls  +---------+
-| MainWindow | --------> | Controller | -------> | AsusHardware | -------> | ATKACPI |
-+------------+           +------------+          +--------------+          +---------+
-                             |
-                             | sets
-                             v
-                         +---------+  calls  +---------------+
-                         | Thermal | ------> | PawnIOWrapper |
-                         +---------+         +---------------+
-```
+## Results
 
-## Run
+Averages measured on my TUF A16 FA607NUQ over 7 days, stock firmware vs. my TUF Control profiles.
 
-Install the [.NET 10 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/10.0), download and extract [TufControl-win-x64.zip](https://github.com/atakang7/tuf-control/releases/latest), then run in administrator PowerShell from that folder:
-
-```powershell
-Get-ChildItem -File | Unblock-File
-.\Install.ps1
-```
-
-The installer copies files to `C:\Program Files\TufControl` and creates the `TufControl.Logon` task; uninstall with `.\Uninstall.ps1` from the extracted folder.
-
-## Config
-
-Edit profiles in the UI; settings are stored in `%LOCALAPPDATA%\TufControl\profiles.json`.
-
-| var | default | what |
+| | Stock firmware | TUF Control |
 |---|---|---|
-| `AcProfile` | `Profilim` | Profile on AC power |
-| `BatteryProfile` | `Profilim` | Profile on battery |
-| `StartupMode` | `auto` | Profile selection at sign-in |
-| `BootEarly` | `false` | Apply at boot through the service |
-| `RecordHistory` | `true` | Save metric history |
+| **Plugged in: CPU temp** | 59.1 °C | **55.7 °C** |
+| **Plugged in: CPU fan** | 2,907 rpm | **2,372 rpm (−18 %)** |
+| **On battery: CPU fan** | 5,185 rpm | **771 rpm (−85 %)** |
+| **On battery: power drain** | 14.4 W | **10.9 W (−24 %)** |
 
-## CI
+Recorded time: plugged in 5.6 h stock / 73.7 h TUF Control, on battery 0.5 h / 1.5 h.
+Trade-off: with the 15 W plugged-in profile the average CPU clock is 2.8 GHz instead of 3.3 GHz.
+Raise the limit in a second profile for gaming.
 
-```text
-+----------+  source  +-------+  output  +---------+  files  +---------+
-| checkout | -------> | Build | -------> | Publish | ------> | Package |
-+----------+          +-------+          +---------+         +---------+
-                                                              |
-                                                              | zip
-                                                              v
-                                                    +-----------------+  zip  +---------+
-                                                    | upload-artifact | ----> | Release |
-                                                    +-----------------+       +---------+
-```
+<img src="docs/screenshots/dashboard.png" alt="TUF Control dashboard">
 
-`Release` runs only for `v*` tags; pull requests run the Windows build and package steps.
+## Install
 
-## Limits
+1. Install the [.NET 10 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/10.0).
+2. Download and extract [`TufControl-win-x64.zip`](https://github.com/atakang7/tuf-control/releases/latest).
+3. In that folder, open **Terminal (Admin)** and run:
+   ```powershell
+   Get-ChildItem | Unblock-File; .\Install.ps1
+   ```
 
-- Only FA607NUQ receives hardware writes; other models run read-only.
-- Windows x64 build 19041+ and ASUS System Control Interface v3 are required.
-- BIOS FA607NUQ.300 is tested; other versions show a warning.
-- PawnIO 2.x is needed for the Ryzen Rembrandt CPU temperature limit; NVIDIA telemetry needs its driver.
-- The firmware does not expose active fan curves or power caps for readback.
+It starts at every sign-in. Remove it with `.\Uninstall.ps1`.
 
-Build commands, diagnostic flags and safety bounds: [details](docs/details.md). License: [GPL-3.0](LICENSE), with [third-party notices](THIRD-PARTY-NOTICES.md).
+---
+
+[Details](docs/details.md) · [GPL-3.0](LICENSE) · Based on [G-Helper](https://github.com/seerge/g-helper) · Not affiliated with ASUS
